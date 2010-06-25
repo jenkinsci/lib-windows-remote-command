@@ -1,10 +1,12 @@
 package org.jvnet.hudson.remcom;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.jinterop.dcom.common.IJIAuthInfo;
 import org.jinterop.dcom.common.JIDefaultAuthInfoImpl;
-import org.jvnet.hudson.remcom.WindowsRemoteProcessLauncher;
+import org.jinterop.dcom.common.JIException;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.logging.ConsoleHandler;
@@ -16,7 +18,9 @@ import java.util.logging.Logger;
  */
 public class App {
     private static IJIAuthInfo createAuth() throws IOException {
-        return new JIDefaultAuthInfoImpl("", "kohsuke", "kohsuke");
+        String pwd = FileUtils.readFileToString(new File("/home/kohsuke/.cubit")).trim();
+        return new JIDefaultAuthInfoImpl("cloud", "kohsuke", pwd);
+//        return new JIDefaultAuthInfoImpl("", "kohsuke", "kohsuke");
     }
 
     public static void main(String[] args) throws Exception {
@@ -26,9 +30,36 @@ public class App {
         ConsoleHandler ch = new ConsoleHandler();
         ch.setLevel(Level.ALL);
         l.addHandler(ch);
-        
-        String host = "10.1.6.71";
 
+//        String host = "10.1.6.71";
+        String host = "10.1.68.89";
+
+        installJdk(host);
+//        blockingTest(host);
+
+//        permissionTest(host);
+    }
+
+    private static void installJdk(String host) throws IOException, JIException, InterruptedException {
+        WindowsRemoteProcessLauncher wrp = new WindowsRemoteProcessLauncher(host, createAuth());
+        Process proc = wrp.launch("c:\\hudson\\jdk.exe /s \"/v/qn REBOOT=Suppress INSTALLDIR=c:\\hudson\\jdk /L c:\\hudson/jdk.exe.install.log\"", "c:\\");
+        proc.getOutputStream().close();
+        IOUtils.copy(proc.getInputStream(),System.out);
+
+        System.out.println();
+        System.out.println("Exit code="+proc.waitFor());
+    }
+
+    private static void blockingTest(String host) throws IOException, JIException, InterruptedException {
+        WindowsRemoteProcessLauncher wrp = new WindowsRemoteProcessLauncher(host, createAuth());
+        Process proc = wrp.launch("c:\\cygwin\\bin\\cat", "c:\\");
+        IOUtils.copy(proc.getInputStream(),System.out);
+
+        System.out.println();
+        System.out.println("Exit code="+proc.waitFor());
+    }
+
+    private static void permissionTest(String host) throws IOException, JIException, InterruptedException {
         WindowsRemoteProcessLauncher wrp = new WindowsRemoteProcessLauncher(host, createAuth());
         Process proc = wrp.launch("c:\\cygwin\\bin\\cat > iAmHere", "c:\\");
         OutputStream o = proc.getOutputStream();
