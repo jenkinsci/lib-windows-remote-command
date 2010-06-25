@@ -4,6 +4,7 @@ import jcifs.smb.NtStatus;
 import jcifs.smb.NtlmPasswordAuthentication;
 import jcifs.smb.SmbException;
 import jcifs.smb.SmbFile;
+import jcifs.smb.SmbFileInputStream;
 import jcifs.smb.SmbNamedPipe;
 import org.jinterop.dcom.common.IJIAuthInfo;
 import org.jinterop.dcom.common.JIException;
@@ -60,8 +61,15 @@ public class WindowsRemoteProcessLauncher {
      * Sets the connection timeout in milli-seconds.
      * Default is 5000.
      */
-    public void setTimeout(int milliseconds) {
+    public void setConnectionTimeout(int milliseconds) {
         this.timeout = milliseconds;
+    }
+
+    /**
+     * Host that this launcher represents.
+     */
+    public String getHostName() {
+        return hostName;
     }
 
     private NtlmPasswordAuthentication createSmbAuth() throws IOException {
@@ -229,7 +237,7 @@ public class WindowsRemoteProcessLauncher {
 
             @Override
             public synchronized int exitValue() {
-                if (exitCode==null) throw new IllegalStateException();
+                if (exitCode==null) throw new IllegalThreadStateException();
                 return exitCode;
             }
 
@@ -270,7 +278,9 @@ public class WindowsRemoteProcessLauncher {
         long start = System.currentTimeMillis();
         while (true) {
             try {
-                return pipe.getNamedPipeInputStream();
+                SmbFileInputStream in = (SmbFileInputStream)pipe.getNamedPipeInputStream();
+                in.setTimeout(24L*60*60*1000);  // effectively give it an infinite timeout
+                return in;
             } catch (SmbException e) {
                 if (e.getNtStatus()!=NtStatus.NT_STATUS_PIPE_BUSY)
                     throw e;
