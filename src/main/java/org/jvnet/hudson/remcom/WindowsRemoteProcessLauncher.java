@@ -122,7 +122,7 @@ public class WindowsRemoteProcessLauncher {
                         "%SystemRoot%\\RemComSvc.exe",
                         Win32OwnProcess, 1, "Manual", false);
                 if(r!=0)
-                    throw new IOException("Failed to register a service");
+                    throw new IOException("Failed to register a service: error="+r);
 
                 Thread.sleep(1000);
                 rsvc = services.getService("RemComSVC");
