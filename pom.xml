@@ -6,7 +6,7 @@
     <version>1.32</version>
   </parent>
   <artifactId>windows-remote-command</artifactId>
-  <version>1.4-SNAPSHOT</version>
+  <version>1.4</version>
   <name>windows-remote-command</name>
   <description>
     Executes a command remotely on Windows.
